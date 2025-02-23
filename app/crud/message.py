@@ -27,7 +27,7 @@ class CRUDMessage(CRUDBase[Message, MessageCreate, MessageQueryParams]):
                 query["_id"] = {"$lt": ObjectId(params.before_id)}
                 
             cursor = collection.find(query)\
-                .sort("created_at", -1)\
+                .sort([("_id", -1)])\
                 .limit(params.limit)
                 
             messages = await cursor.to_list(length=params.limit)

@@ -34,6 +34,7 @@ class MessageService:
         
         # Cache miss, get from database
         messages = await self._get_messages_from_db(user_brand_id, params)
+        messages.reverse()
         
         # Cache the results
         await self._cache_messages(cache_key, messages)

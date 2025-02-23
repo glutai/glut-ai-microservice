@@ -9,12 +9,13 @@ from app.core.logger import db_logger as logger
 class RedisClient:
     def __init__(self):
         logger.debug(f"Initializing Redis client at {settings.REDIS_HOST}:{settings.REDIS_PORT}")
-        # Construct Redis URL with password
-        redis_url = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}"
+        # Construct Redis URL with explicit password
+        redis_url = f"redis://default:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}"
         self.redis = aioredis.from_url(
             redis_url,
             encoding="utf-8",
-            decode_responses=True
+            decode_responses=True,
+            username="default"  # Explicitly set username
         )
         logger.info("Redis client initialized")
 

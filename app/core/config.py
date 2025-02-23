@@ -13,13 +13,19 @@ class Settings(BaseSettings):
     MONGO_PASSWORD: str
     MONGO_USER: str
     MONGODB_URL: str
-    MONGODB_DB: str = "ai_services"
-    DB_NAME: str = 'ai_services'
+    MONGODB_DB: str 
     
-    # Security configs
-    SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    JWT_ALGORITHM: str = "HS256"
+    # Internal service auth
+    INTERNAL_API_KEY: str
+    ALLOWED_SERVICES: List[str] = ["auth-service", "api-gateway"]
+    
+    # Service mesh configuration
+    SERVICE_MESH_ENABLED: bool = True
+    SERVICE_NAME: str = "message-service"
+    
+    # Internal endpoints configuration
+    INTERNAL_API_PREFIX: str = "/internal"
+
     
     # CORS configs
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
@@ -50,7 +56,7 @@ class Settings(BaseSettings):
     # Request Logging
     LOG_REQUEST_DETAILS: bool = True
     LOG_RESPONSE_DETAILS: bool = True
-    LOG_REQUEST_HEADERS: bool = False  # Set to True only in development
+    LOG_REQUEST_HEADERS: bool = False  # Set to True only in development.
     LOG_REQUEST_BODY: bool = False  # Set to True only in development
     
     # Performance Logging

@@ -176,18 +176,28 @@ def log_api_call(endpoint: str) -> Callable:
         async def wrapper(*args, **kwargs):
             start_time = time.time()
             
+            # Extract request context if available
+            request_context = {}
+            for arg in kwargs.values():
+                if hasattr(arg, 'user_id'):
+                    request_context['user_id'] = getattr(arg, 'user_id')
+                if hasattr(arg, 'brand_id'):
+                    request_context['brand_id'] = getattr(arg, 'brand_id')
+                if hasattr(arg, 'id'):
+                    request_context['resource_id'] = getattr(arg, 'id')
+
             # Clean sensitive data
-            safe_kwargs = {
-                k: v for k, v in kwargs.items() 
-                if k not in ['password', 'token', 'secret']
-            }
-            
             try:
-                # Log API call
+                # Log API call start
                 logger.info(f"API endpoint '{endpoint}' called", extra={
                     "endpoint": endpoint,
-                    "parameters": safe_kwargs
+                    "parameters": {
+                        k: v for k, v in kwargs.items() 
+                        if k not in ['password', 'token', 'secret']
+                    },
+                    **request_context
                 })
+                
                 
                 # Execute endpoint
                 result = await func(*args, **kwargs)
@@ -207,18 +217,108 @@ def log_api_call(endpoint: str) -> Callable:
                 
                 return result
                 
-            except Exception as e:
-                # Log API error
+            except ValidationError as e:
+                duration_ms = (time.time() - start_time) * 1000
+                logger.warning(
+                    f"Validation error in '{endpoint}'",
+                    extra={
+                        "endpoint": endpoint,
+                        "error": str(e),
+                        "duration_ms": round(duration_ms, 2),
+                        **request_context
+                    }
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail={
+                        "message": str(e),
+                        "error_type": "validation_error",
+                        **request_context
+                    }
+                )
+                
+            except NotFoundError as e:
+                duration_ms = (time.time() - start_time) * 1000
+                logger.warning(
+                    f"Resource not found in '{endpoint}'",
+                    extra={
+                        "endpoint": endpoint,
+                        "error": str(e),
+                        "duration_ms": round(duration_ms, 2),
+                        **request_context
+                    }
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail={
+                        "message": str(e),
+                        "error_type": "not_found",
+                        **request_context
+                    }
+                )
+                
+            except AuthenticationError as e:
+                duration_ms = (time.time() - start_time) * 1000
+                logger.warning(
+                    f"Authentication error in '{endpoint}'",
+                    extra={
+                        "endpoint": endpoint,
+                        "error": str(e),
+                        "duration_ms": round(duration_ms, 2),
+                        **request_context
+                    }
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail={
+                        "message": str(e),
+                        "error_type": "authentication_error"
+                    },
+                    headers={"WWW-Authenticate": "Bearer"}
+                )
+                
+            except DatabaseError as e:
+                duration_ms = (time.time() - start_time) * 1000
                 logger.error(
-                    f"API endpoint '{endpoint}' failed",
+                    f"Database error in '{endpoint}'",
+                    extra={
+                        "endpoint": endpoint,
+                        "error": str(e),
+                        "duration_ms": round(duration_ms, 2),
+                        **request_context
+                    }
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail={
+                        "message": "Database operation failed",
+                        "error_type": "database_error",
+                        **request_context
+                    }
+                )
+                
+            except Exception as e:
+                duration_ms = (time.time() - start_time) * 1000
+                logger.error(
+                    f"Unexpected error in '{endpoint}'",
                     extra={
                         "endpoint": endpoint,
                         "error": str(e),
                         "error_type": type(e).__name__,
-                        "duration_ms": round((time.time() - start_time) * 1000, 2)
+                        "duration_ms": round(duration_ms, 2),
+                        **request_context
                     }
                 )
-                raise
+                # In production, don't expose internal error details
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail={
+                        "message": "An unexpected error occurred",
+                        "error_type": "internal_error",
+                        **request_context
+                    }
+                )
+                
                 
         return wrapper
     return decorator
