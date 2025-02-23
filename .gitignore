@@ -1,0 +1,7 @@
+.env
+**/env
+**/__pycache__
+aggregated_code.txt
+all-code.py
+launch.json
+**/logs
