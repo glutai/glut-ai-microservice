@@ -68,7 +68,8 @@ def create_application() -> FastAPI:
             title=settings.PROJECT_NAME,
             version=settings.VERSION,
             description="Glutt.ai API with MongoDB",
-            openapi_url=f"{settings.API_V1_STR}/openapi.json",
+            openapi_url=f"{settings.API_V1_STR}/openapi.json"
+      
         )
         logger.info("FastAPI application initialized")
 

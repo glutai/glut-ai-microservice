@@ -135,19 +135,3 @@ class PerformanceMonitoringMiddleware(BaseHTTPMiddleware):
         })
 
         return response
-    
-class UserContextMiddleware(BaseHTTPMiddleware):
-    """Extract user context from upstream service headers"""
-    
-    async def dispatch(self, request: Request, call_next):
-        # Extract user context from headers set by API gateway
-        user_id = request.headers.get("X-User-ID")
-        tenant_id = request.headers.get("X-Tenant-ID")
-        
-        # Add to request state for use in handlers
-        request.state.user_id = user_id
-        request.state.tenant_id = tenant_id
-        
-        response = await call_next(request)
-        return response
-

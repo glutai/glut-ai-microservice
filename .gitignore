@@ -5,3 +5,4 @@ aggregated_code.txt
 all-code.py
 launch.json
 **/logs
+**/vectorstores

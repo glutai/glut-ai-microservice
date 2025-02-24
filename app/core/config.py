@@ -15,16 +15,10 @@ class Settings(BaseSettings):
     MONGODB_URL: str
     MONGODB_DB: str 
     
-    # Internal service auth
-    INTERNAL_API_KEY: str
-    ALLOWED_SERVICES: List[str] = ["auth-service", "api-gateway"]
     
     # Service mesh configuration
     SERVICE_MESH_ENABLED: bool = True
     SERVICE_NAME: str = "message-service"
-    
-    # Internal endpoints configuration
-    INTERNAL_API_PREFIX: str = "/internal"
 
     
     # CORS configs
@@ -63,7 +57,12 @@ class Settings(BaseSettings):
     LOG_SLOW_REQUESTS: bool = True
     LOG_SLOW_THRESHOLD_MS: int = 500  # Log requests taking more than 500ms
     
-
+    EMBEDDINGS_MODEL : str = 'text-embedding-004'
+    RAG_CHUNK_SIZE: int = 1000
+    RAG_CHUNK_OVERLAP:int = 200
+    RAG_TOP_K : int = 3
+    
+    DATABASE_URL: str = 'postgresql://postgres:postgres@localhost:5432/prepod-glut'
     class Config:
         env_file = ".env"
         case_sensitive = True
